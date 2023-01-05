@@ -1,7 +1,7 @@
 {
   "name": "zen-server",
   "version": "0.1.0",
-  "description": "A mininal HTTP server with live reload capabilities, geared towards creative coding and rapid prototyping.",
+  "description": "A mininal HTTP server with live reload capabilities.",
   "keywords": [
     "front-end",
     "development",

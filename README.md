@@ -1,7 +1,7 @@
 Zen Server
 ===========
 
-A mininal HTTP server with live reload capabilities, geared towards creative coding and rapid prototyping.
+A mininal HTTP server with live reload capabilities.
 
 This project started as a stripped-down fork of [live-server](https://github.com/tapio/live-server) by Tapio Vierros. Modifications include:
 - Support for polling-based file watching (which allows for usage in WSL and networked folders)
