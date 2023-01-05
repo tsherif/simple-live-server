@@ -9,7 +9,6 @@
     },
     "plugins": ["@typescript-eslint"],
     "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
-    "ignorePatterns": "*.js",
     "rules": {
         "semi": ["error", "always"],
         "quotes": ["error", "double"],

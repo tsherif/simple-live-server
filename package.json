@@ -39,7 +39,7 @@
     "build": "tsc && copyfiles -f src/injected.html dist/",
     "watch": "chokidar src/* --initial -c \"npm run build\"",
     "watch-poll": "chokidar src/* --initial -p -c \"npm run build\"",
-    "lint": "eslint zen-server.ts index.ts"
+    "lint": "eslint src/*.ts"
   },
   "main": "./dist/zen-server.js",
   "bin": {
