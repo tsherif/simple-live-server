@@ -7,7 +7,7 @@ This project started as a stripped-down fork of [live-server](https://github.com
 - Support for polling-based file watching (which allows for usage in WSL and networked folders)
 - Updated dependencies
 - Port to TypeScript
-- Stripped-down functionality (no support for HTTPS, proxying, SPA, etc).
+- Stripped-down functionality (no support for HTTPS, proxying, SPA, etc)
 
 Installation
 ------------
@@ -19,7 +19,7 @@ Installation
 Usage
 ------------
 
-To simply server local files:
+To simply serve local files:
 
 ```bash
     simple-live-server [options] [root-path]
@@ -29,10 +29,6 @@ On file systems where change notifications aren't available, such as [WSL 2](htt
 
 ```bash
     simple-live-server -p [options] [root-path]
-```
-
-```bash
-    simple-live-server [options] [root-path]
 ```
 
 For projects that require a build step, I recommend [chokidar-cli](https://www.npmjs.com/package/chokidar-cli) and [npm-run-all](https://www.npmjs.com/package/npm-run-all), e.g.:
@@ -53,8 +49,8 @@ Command line parameters:
 * `--help | -h`    - Display terse usage hint and exit
 * `--version | -v` - Display version and exit
 
-Usage from node
----------------
+Usage from Node.js
+------------------
 
 ```javascript
 const server = require("simple-live-server");
@@ -65,7 +61,7 @@ const params = {
     watch: ["*.js", "*.html"],          // Array of paths to watch for reloading.
     ignore: ["scss", "my/templates"],   // Array of paths to ignore for reloading.
     logLevel: 2,                        // 0 = errors only, 1 = some, 2 = lots
-    poll: true                          // When true,  use polling to watch files. 
+    poll: true                          // When true, use polling to watch files. 
 };
 
 server.start(params);
