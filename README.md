@@ -1,5 +1,5 @@
-Zen Server
-===========
+Simple Live Server
+==================
 
 A mininal HTTP server with live reload capabilities.
 
@@ -13,8 +13,34 @@ Installation
 ------------
 
 ```bash
-    npm i -D zen-server
+    npm i -D simple-live-server
 ```
+
+Usage
+------------
+
+To simply server local files:
+
+```bash
+    simple-live-server [options] [root-path]
+```
+
+On file systems where change notifications aren't available, such as [WSL 2](https://github.com/microsoft/WSL/issues/4739), polling can be enabled with the `-p` option: 
+
+```bash
+    simple-live-server -p [options] [root-path]
+```
+
+```bash
+    simple-live-server [options] [root-path]
+```
+
+For projects that require a build step, I recommend [chokidar-cli](https://www.npmjs.com/package/chokidar-cli) and [npm-run-all](https://www.npmjs.com/package/npm-run-all), e.g.:
+
+```bash
+run-p --race "chokidar index.ts -c tsc" "simple-live-server --watch=index.js"
+```
+
 
 Command line parameters:
 
@@ -23,7 +49,7 @@ Command line parameters:
 * `--verbose | -V` - More logging (logs all requests, etc.)
 * `--watch=PATH`   - Comma-separated string of paths to inclusively watch for changes (default: everything)
 * `--ignore=PATH`  - Comma-separated string of paths to ignore ([anymatch](https://github.com/es128/anymatch)-compatible definition)
-* `--poll`         - Use polling to watch files (this can be useful in contexts where file-change notifications are available, e.g. [WSL](https://github.com/microsoft/WSL/issues/4739))
+* `--poll | -p`    - Use polling to watch files
 * `--help | -h`    - Display terse usage hint and exit
 * `--version | -v` - Display version and exit
 
@@ -31,7 +57,7 @@ Usage from node
 ---------------
 
 ```javascript
-const zenServer = require("zen-server");
+const server = require("simple-live-server");
 
 const params = {
     port: 8181,                         // Set the server port. Defaults to 8080.
@@ -42,6 +68,6 @@ const params = {
     poll: true                          // When true,  use polling to watch files. 
 };
 
-zenServer.start(params);
+server.start(params);
 ```
 

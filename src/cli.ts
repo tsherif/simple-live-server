@@ -31,10 +31,10 @@
 
 import * as path from "path";
 import * as fs from "fs";
-import zenServer from "./zen-server";
-import type { ZenServerOptions } from "./zen-server";
+import server from "./server";
+import type { ServerOptions } from "./server";
 
-const opts: ZenServerOptions = {
+const opts: ServerOptions = {
     port: 8080,
     logLevel: 2,
     poll: false
@@ -69,11 +69,11 @@ for (let i = process.argv.length - 1; i >= 2; --i) {
         const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, "./package.json"), "utf8"));
         console.log(packageJson.name, packageJson.version);
         process.exit();
-    } else if (arg === "--poll") {
+    } else if (arg === "--poll" || arg === "-p") {
         opts.poll = true;
         process.argv.splice(i, 1);
     } else if (arg === "--help" || arg === "-h") {
-        console.log("Usage: zen-server [-v|--version] [-h|--help] [-q|--quiet] [--port=PORT] [--ignore=PATH] [--poll] [PATH]");
+        console.log("Usage: simple-live-server [-v|--version] [-h|--help] [-q|--quiet] [--port=PORT] [--ignore=PATH] [-p|--poll] [PATH]");
         process.exit();
     }
 }
@@ -88,4 +88,4 @@ if (opts.ignore) {
     opts.ignore = ignorePaths.map((relativePath) => path.join(dir, relativePath));
 }
 
-zenServer.start(opts);
+server.start(opts);

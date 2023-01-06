@@ -1,5 +1,5 @@
 {
-  "name": "zen-server",
+  "name": "simple-live-server",
   "version": "0.1.0",
   "description": "A mininal HTTP server with live reload capabilities.",
   "keywords": [
@@ -41,13 +41,13 @@
     "watch-poll": "chokidar src/* --initial -p -c \"npm run build\"",
     "lint": "eslint src/*.ts"
   },
-  "main": "./dist/zen-server.js",
+  "main": "./dist/server.js",
   "bin": {
-    "zen-server": "./dist/cli.js"
+    "simple-live-server": "./dist/cli.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tsherif/zen-server"
+    "url": "https://github.com/tsherif/simple-live-server"
   },
   "license": "MIT"
 }

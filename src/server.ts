@@ -42,7 +42,7 @@ import "colors";
 
 type IgnoreMatcher = string | RegExp | ((testString: string) => boolean);
 
-export interface ZenServerOptions {
+export interface ServerOptions {
     port?: number;
     logLevel?: number;
     poll?: boolean;
@@ -141,69 +141,87 @@ function staticServer(root: string) {
  * @param logLevel {number} 0 = errors only, 1 = some, 2 = lots
  */
 
-interface ZenServerInterface {
-    server: http.Server | null;
+interface ServerInterface {
+    http: http.Server | null;
     watcher: chokidar.FSWatcher | null;
     logLevel: number;
-    start: (options: ZenServerOptions) => void;
+    start: (options: ServerOptions) => void;
     shutdown: () => void;
 }
 
-const zenServer: ZenServerInterface = {
-    server: null,
+const server: ServerInterface = {
+    http: null,
     watcher: null,
     logLevel: 2,
-    start(options: ZenServerOptions) {
+    start(options: ServerOptions) {
         const {
             port = 8080, // 0 means random
             poll = false
         } = options;
         const root = options.root || process.cwd();
         const watchPaths = options.watch ?? [ root ];
-        zenServer.logLevel = options.logLevel ?? 2;
-        const staticServerHandler = staticServer(root);
+        server.logLevel = options.logLevel ?? 2;
     
-        // Setup a web server
+        
+        ////////////////////////////////////
+        // Set up connect app
+        ////////////////////////////////////
+
         const app = connect();
     
         // Add logger. Level 2 logs only errors
-        if (zenServer.logLevel === 2) {
+        if (server.logLevel === 2) {
             app.use(logger("dev", {
                 skip: (_req, res) => res.statusCode < 400
             }));
         // Level 2 or above logs all requests
-        } else if (zenServer.logLevel > 2) {
+        } else if (server.logLevel > 2) {
             app.use(logger("dev"));
         }
     
-        app.use(staticServerHandler) // Custom static server
+        app.use(staticServer(root)) // Custom static server
             .use(serveIndex(root, { icons: true }) as connect.NextHandleFunction);
-    
-        const server = http.createServer(app);
+
+        
+        ////////////////////////////////////
+        // Set up http server
+        ////////////////////////////////////
+
+        const httpServer = http.createServer(app);
     
         // Handle server startup errors
-        server.addListener("error", e => {
+        httpServer.addListener("error", e => {
             console.error(e.toString().red);
-            zenServer.shutdown();
+            server.shutdown();
         });
     
         // Setup server to listen at port
-        server.listen(port, () => {	
+        httpServer.listen(port, () => {	
+            server.http = httpServer;
+
             // Output
-            if (zenServer.logLevel >= 1) {
+            if (server.logLevel >= 1) {
                 console.log(("Serving \"%s\" on port %s").green, root, port);
             }
         });
 
-        // Setup WebSocket
-        const websocketServer = new WebSocketServer({ 
-            server,
+
+        ////////////////////////////////////
+        // Set up web socket server
+        ////////////////////////////////////
+
+        const webSocketServer = new WebSocketServer({ 
+            server: httpServer,
             clientTracking: true 
         });
 
-        websocketServer.on("connection", ws => ws.send("connected"));
+        webSocketServer.on("connection", ws => ws.send("connected"));
     
-        // Setup watcher
+
+        ////////////////////////////////////
+        // Set up file watcher
+        ////////////////////////////////////
+
         let ignored: IgnoreMatcher[] = [
             // Always ignore dotfiles (important e.g. because editor hidden temp files)
             (testPath: string) => testPath !== "." && /(^[.#]|(?:__|~)$)/.test(path.basename(testPath))
@@ -212,47 +230,44 @@ const zenServer: ZenServerInterface = {
             ignored = ignored.concat(options.ignore);
         }
     
-        // Setup file watcher
-        zenServer.watcher = chokidar.watch(watchPaths, {
+        server.watcher = chokidar.watch(watchPaths, {
             usePolling: poll,
             ignored: ignored,
             ignoreInitial: true
         });
 
         function handleChange(changePath: string) {
-            if (zenServer.logLevel >= 1) {
+            if (server.logLevel >= 1) {
                 console.log("Change detected".cyan, changePath); 
             }
 
-            websocketServer.clients.forEach(ws => ws.send("reload"));
+            webSocketServer.clients.forEach(ws => ws.send("reload"));
         }
 
-        zenServer.watcher
+        server.watcher
             .on("change", handleChange)
             .on("add", handleChange)
             .on("unlink", handleChange)
             .on("addDir", handleChange)
             .on("unlinkDir", handleChange)
             .on("ready", () => {
-                if (zenServer.logLevel >= 1) {
+                if (server.logLevel >= 1) {
                     console.log("Ready for changes".cyan);
                 }
             })
             .on("error", err => console.log("ERROR:".red, err));
     
-        return server;
+        return httpServer;
     },
 
     shutdown() {
-        const {watcher, server} = zenServer;
-
-        if (watcher) {
-            watcher.close();
+        if (server.watcher) {
+            server.watcher.close();
         }
-        if (server) {
-            server.close();
+        if (server.http) {
+            server.http.close();
         }
     }
 };
 
-export default zenServer;
+export default server;

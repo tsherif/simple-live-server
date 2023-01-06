@@ -30,7 +30,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 ///////////////////////////////////////////////////////////////////////////////////
 const path = require("path");
 const fs = require("fs");
-const zen_server_1 = require("./zen-server");
+const server_1 = require("./server");
 const opts = {
     port: 8080,
     logLevel: 2,
@@ -70,12 +70,12 @@ for (let i = process.argv.length - 1; i >= 2; --i) {
         console.log(packageJson.name, packageJson.version);
         process.exit();
     }
-    else if (arg === "--poll") {
+    else if (arg === "--poll" || arg === "-p") {
         opts.poll = true;
         process.argv.splice(i, 1);
     }
     else if (arg === "--help" || arg === "-h") {
-        console.log("Usage: zen-server [-v|--version] [-h|--help] [-q|--quiet] [--port=PORT] [--ignore=PATH] [--poll] [PATH]");
+        console.log("Usage: simple-live-server [-v|--version] [-h|--help] [-q|--quiet] [--port=PORT] [--ignore=PATH] [-p|--poll] [PATH]");
         process.exit();
     }
 }
@@ -87,4 +87,4 @@ if (opts.watch) {
 if (opts.ignore) {
     opts.ignore = ignorePaths.map((relativePath) => path.join(dir, relativePath));
 }
-zen_server_1.default.start(opts);
+server_1.default.start(opts);

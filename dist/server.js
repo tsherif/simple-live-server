@@ -120,8 +120,8 @@ function staticServer(root) {
         }
     };
 }
-const zenServer = {
-    server: null,
+const server = {
+    http: null,
     watcher: null,
     logLevel: 2,
     start(options) {
@@ -130,42 +130,51 @@ const zenServer = {
         poll = false } = options;
         const root = options.root || process.cwd();
         const watchPaths = (_a = options.watch) !== null && _a !== void 0 ? _a : [root];
-        zenServer.logLevel = (_b = options.logLevel) !== null && _b !== void 0 ? _b : 2;
-        const staticServerHandler = staticServer(root);
-        // Setup a web server
+        server.logLevel = (_b = options.logLevel) !== null && _b !== void 0 ? _b : 2;
+        ////////////////////////////////////
+        // Set up connect app
+        ////////////////////////////////////
         const app = connect();
         // Add logger. Level 2 logs only errors
-        if (zenServer.logLevel === 2) {
+        if (server.logLevel === 2) {
             app.use(logger("dev", {
                 skip: (_req, res) => res.statusCode < 400
             }));
             // Level 2 or above logs all requests
         }
-        else if (zenServer.logLevel > 2) {
+        else if (server.logLevel > 2) {
             app.use(logger("dev"));
         }
-        app.use(staticServerHandler) // Custom static server
+        app.use(staticServer(root)) // Custom static server
             .use(serveIndex(root, { icons: true }));
-        const server = http.createServer(app);
+        ////////////////////////////////////
+        // Set up http server
+        ////////////////////////////////////
+        const httpServer = http.createServer(app);
         // Handle server startup errors
-        server.addListener("error", e => {
+        httpServer.addListener("error", e => {
             console.error(e.toString().red);
-            zenServer.shutdown();
+            server.shutdown();
         });
         // Setup server to listen at port
-        server.listen(port, () => {
+        httpServer.listen(port, () => {
+            server.http = httpServer;
             // Output
-            if (zenServer.logLevel >= 1) {
+            if (server.logLevel >= 1) {
                 console.log(("Serving \"%s\" on port %s").green, root, port);
             }
         });
-        // Setup WebSocket
-        const websocketServer = new ws_1.WebSocketServer({
-            server,
+        ////////////////////////////////////
+        // Set up web socket server
+        ////////////////////////////////////
+        const webSocketServer = new ws_1.WebSocketServer({
+            server: httpServer,
             clientTracking: true
         });
-        websocketServer.on("connection", ws => ws.send("connected"));
-        // Setup watcher
+        webSocketServer.on("connection", ws => ws.send("connected"));
+        ////////////////////////////////////
+        // Set up file watcher
+        ////////////////////////////////////
         let ignored = [
             // Always ignore dotfiles (important e.g. because editor hidden temp files)
             (testPath) => testPath !== "." && /(^[.#]|(?:__|~)$)/.test(path.basename(testPath))
@@ -173,40 +182,38 @@ const zenServer = {
         if (options.ignore) {
             ignored = ignored.concat(options.ignore);
         }
-        // Setup file watcher
-        zenServer.watcher = chokidar.watch(watchPaths, {
+        server.watcher = chokidar.watch(watchPaths, {
             usePolling: poll,
             ignored: ignored,
             ignoreInitial: true
         });
         function handleChange(changePath) {
-            if (zenServer.logLevel >= 1) {
+            if (server.logLevel >= 1) {
                 console.log("Change detected".cyan, changePath);
             }
-            websocketServer.clients.forEach(ws => ws.send("reload"));
+            webSocketServer.clients.forEach(ws => ws.send("reload"));
         }
-        zenServer.watcher
+        server.watcher
             .on("change", handleChange)
             .on("add", handleChange)
             .on("unlink", handleChange)
             .on("addDir", handleChange)
             .on("unlinkDir", handleChange)
             .on("ready", () => {
-            if (zenServer.logLevel >= 1) {
+            if (server.logLevel >= 1) {
                 console.log("Ready for changes".cyan);
             }
         })
             .on("error", err => console.log("ERROR:".red, err));
-        return server;
+        return httpServer;
     },
     shutdown() {
-        const { watcher, server } = zenServer;
-        if (watcher) {
-            watcher.close();
+        if (server.watcher) {
+            server.watcher.close();
         }
-        if (server) {
-            server.close();
+        if (server.http) {
+            server.http.close();
         }
     }
 };
-exports.default = zenServer;
+exports.default = server;
