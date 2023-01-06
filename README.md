@@ -19,7 +19,7 @@ Installation
 Usage
 ------------
 
-To simply serve local files:
+To serve local files:
 
 ```bash
     simple-live-server [options] [root-path]
