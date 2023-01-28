@@ -37,7 +37,8 @@ import type { ServerOptions } from "./server";
 const opts: ServerOptions = {
     port: 8080,
     logLevel: 2,
-    poll: false
+    poll: false,
+    headers: {}
 };
 
 let ignorePaths: string[] = [];
@@ -71,6 +72,14 @@ for (let i = process.argv.length - 1; i >= 2; --i) {
         process.exit();
     } else if (arg === "--poll" || arg === "-p") {
         opts.poll = true;
+        process.argv.splice(i, 1);
+    } else if (arg.indexOf("--header=") > -1) {
+        const header = arg.substring(9);
+        const colonIndex = header.indexOf(":");
+        const key = header.substring(0, colonIndex);
+        const value = header.substring(colonIndex + 1);
+        opts.headers = opts.headers ?? {};
+        opts.headers[key] = value;
         process.argv.splice(i, 1);
     } else if (arg === "--help" || arg === "-h") {
         console.log("Usage: simple-live-server [-v|--version] [-h|--help] [-q|--quiet] [--port=PORT] [--ignore=PATH] [-p|--poll] [PATH]");

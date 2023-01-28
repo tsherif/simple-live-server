@@ -48,7 +48,8 @@ export interface ServerOptions {
     poll?: boolean;
     root?: string;
     watch?: string[];
-    ignore?: IgnoreMatcher[]; 
+    ignore?: IgnoreMatcher[];
+    headers?: Record<string, string>;
 }
 
 const INJECTED_CODE = fs.readFileSync(path.join(__dirname, "injected.html"), "utf8");
@@ -62,7 +63,7 @@ function escape(html: string) {
 }
 
 // Based on connect.static(), but streamlined and with added code injecter
-function staticServer(root: string) {
+function staticServer(root: string, headers: Record<string, string>) {
     return (req: connect.IncomingMessage, res: http.ServerResponse, next: connect.NextFunction) => {
         if (req.method !== "GET" && req.method !== "HEAD") {
             return next();
@@ -103,6 +104,9 @@ function staticServer(root: string) {
                 res.setHeader("Content-Type", "text/html");
                 res.setHeader("Cache-Control", "public, max-age=0");
                 res.setHeader("Accept-Ranges", "bytes");
+                Object.entries(headers).forEach(([ key, value ]) => {
+                    res.setHeader(key, value);
+                });
                 const match = /(<\/body>|<\/head>)/.exec(contents);
                 if (match) {
                     res.end(contents.replace(match[0], INJECTED_CODE + match[0]));
@@ -126,6 +130,11 @@ function staticServer(root: string) {
                     res.statusCode = 301;
                     res.setHeader("Location", pathname + "/");
                     res.end("Redirecting to " + escape(pathname) + "/");
+                })
+                .on("headers", res => {
+                    Object.entries(headers).forEach(([ key, value ]) => {
+                        res.setHeader(key, value);
+                    });
                 })
                 .pipe(res);
         }
@@ -156,7 +165,8 @@ const server: ServerInterface = {
     start(options: ServerOptions) {
         const {
             port = 8080, // 0 means random
-            poll = false
+            poll = false,
+            headers = {}
         } = options;
         const root = options.root || process.cwd();
         const watchPaths = options.watch ?? [ root ];
@@ -179,7 +189,7 @@ const server: ServerInterface = {
             app.use(logger("dev"));
         }
     
-        app.use(staticServer(root)) // Custom static server
+        app.use(staticServer(root, headers)) // Custom static server
             .use(serveIndex(root, { icons: true }) as connect.NextHandleFunction);
 
         

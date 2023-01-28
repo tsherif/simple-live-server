@@ -22,6 +22,7 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 ///////////////////////////////////////////////////////////////////////////////////
 // Based on live-server copyright (c) 2012 Tapio Vierros
@@ -34,7 +35,8 @@ const server_1 = require("./server");
 const opts = {
     port: 8080,
     logLevel: 2,
-    poll: false
+    poll: false,
+    headers: {}
 };
 let ignorePaths = [];
 for (let i = process.argv.length - 1; i >= 2; --i) {
@@ -72,6 +74,15 @@ for (let i = process.argv.length - 1; i >= 2; --i) {
     }
     else if (arg === "--poll" || arg === "-p") {
         opts.poll = true;
+        process.argv.splice(i, 1);
+    }
+    else if (arg.indexOf("--header=") > -1) {
+        const header = arg.substring(9);
+        const colonIndex = header.indexOf(":");
+        const key = header.substring(0, colonIndex);
+        const value = header.substring(colonIndex + 1);
+        opts.headers = (_a = opts.headers) !== null && _a !== void 0 ? _a : {};
+        opts.headers[key] = value;
         process.argv.splice(i, 1);
     }
     else if (arg === "--help" || arg === "-h") {

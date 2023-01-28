@@ -40,14 +40,15 @@ run-p --race "chokidar index.ts -c tsc" "simple-live-server --watch=index.js"
 
 Command line parameters:
 
-* `--port=NUMBER`  - Port use, default: 8080
-* `--quiet | -q`   - Suppress logging
-* `--verbose | -V` - More logging (logs all requests, etc.)
-* `--watch=PATH`   - Comma-separated string of paths to inclusively watch for changes (default: everything)
-* `--ignore=PATH`  - Comma-separated string of paths to ignore ([anymatch](https://github.com/es128/anymatch)-compatible definition)
-* `--poll | -p`    - Use polling to watch files
-* `--help | -h`    - Display terse usage hint and exit
-* `--version | -v` - Display version and exit
+* `--port=NUMBER`   - Port use, default: 8080
+* `--quiet | -q`    - Suppress logging
+* `--verbose | -V`  - More logging (logs all requests, etc.)
+* `--watch=PATH`    - Comma-separated string of paths to inclusively watch for changes (default: everything)
+* `--ignore=PATH`   - Comma-separated string of paths to ignore ([anymatch](https://github.com/es128/anymatch)-compatible definition)
+* `--poll | -p`     - Use polling to watch files
+* `--header=HEADER` - Add an HTTP header to responses (can be repeated for multiple headers)
+* `--help | -h`     - Display terse usage hint and exit
+* `--version | -v`  - Display version and exit
 
 Usage from Node.js
 ------------------
@@ -61,7 +62,11 @@ const params = {
     watch: ["*.js", "*.html"],          // Array of paths to watch for reloading.
     ignore: ["scss", "my/templates"],   // Array of paths to ignore for reloading.
     logLevel: 2,                        // 0 = errors only, 1 = some, 2 = lots
-    poll: true                          // When true, use polling to watch files. 
+    poll: true,                         // When true, use polling to watch files. 
+    headers: {                          // Add headers to reponses.
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Embedder-Policy": "require-corp"
+    }
 };
 
 server.start(params);

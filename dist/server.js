@@ -48,7 +48,7 @@ function escape(html) {
         .replace(/"/g, "&quot;");
 }
 // Based on connect.static(), but streamlined and with added code injecter
-function staticServer(root) {
+function staticServer(root, headers) {
     return (req, res, next) => {
         var _a;
         if (req.method !== "GET" && req.method !== "HEAD") {
@@ -88,6 +88,9 @@ function staticServer(root) {
                 res.setHeader("Content-Type", "text/html");
                 res.setHeader("Cache-Control", "public, max-age=0");
                 res.setHeader("Accept-Ranges", "bytes");
+                Object.entries(headers).forEach(([key, value]) => {
+                    res.setHeader(key, value);
+                });
                 const match = /(<\/body>|<\/head>)/.exec(contents);
                 if (match) {
                     res.end(contents.replace(match[0], INJECTED_CODE + match[0]));
@@ -116,6 +119,11 @@ function staticServer(root) {
                 res.setHeader("Location", pathname + "/");
                 res.end("Redirecting to " + escape(pathname) + "/");
             })
+                .on("headers", res => {
+                Object.entries(headers).forEach(([key, value]) => {
+                    res.setHeader(key, value);
+                });
+            })
                 .pipe(res);
         }
     };
@@ -127,7 +135,7 @@ const server = {
     start(options) {
         var _a, _b;
         const { port = 8080, // 0 means random
-        poll = false } = options;
+        poll = false, headers = {} } = options;
         const root = options.root || process.cwd();
         const watchPaths = (_a = options.watch) !== null && _a !== void 0 ? _a : [root];
         server.logLevel = (_b = options.logLevel) !== null && _b !== void 0 ? _b : 2;
@@ -145,7 +153,7 @@ const server = {
         else if (server.logLevel > 2) {
             app.use(logger("dev"));
         }
-        app.use(staticServer(root)) // Custom static server
+        app.use(staticServer(root, headers)) // Custom static server
             .use(serveIndex(root, { icons: true }));
         ////////////////////////////////////
         // Set up http server
